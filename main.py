@@ -66,6 +66,79 @@ class Gyujtemeny():
             return "(üres)"
         return ", ".join(k.nev for k in self.kartyak)
 
+# --------------------------------------------------------------------
+def sebzes_szamitas(tamado_tipus, vedo_tipus, tamado_sebzes):
+    # alapértelmezett sebzés
+    sebzes = tamado_sebzes
+
+    # "erős" kapcsolatok – duplázás
+    if (tamado_tipus == "levego" and vedo_tipus == "fold") \
+       or (tamado_tipus == "fold" and vedo_tipus == "viz") \
+       or (tamado_tipus == "viz" and vedo_tipus == "tuz") \
+       or (tamado_tipus == "tuz" and vedo_tipus == "levego"):
+        sebzes = tamado_sebzes * 2
+
+    # "gyenge" kapcsolatok – felezés (lefelé kerekítve)
+    elif (tamado_tipus == "levego" and vedo_tipus == "tuz") \
+        or (tamado_tipus == "tuz" and vedo_tipus == "viz") \
+        or (tamado_tipus == "viz" and vedo_tipus == "fold") \
+        or (tamado_tipus == "fold" and vedo_tipus == "levego"):
+        sebzes = tamado_sebzes // 2  # lefelé kerekítés
+
+    # azonos vagy semleges típus – változatlan sebzés
+    else:
+        sebzes = tamado_sebzes
+
+    return sebzes
+
+def harc(pakli,kazamatak,file_helye):
+    file_helye = Path(file_helye)
+    file_helye.parent.mkdir(parents=True, exist_ok=True)
+    kor_szamlalo = 0
+    if not pakli:
+        raise ValueError("A pakli üres, nincs mivel harcolni.")
+    if not kazamatak:
+        raise ValueError("Nincsenek kazamaták (ellenfél hiányzik).")
+    with file_helye.open("w", encoding="utf-8") as f:
+        akt_jatekos = pakli[0]
+        akt_kazamata = kazamatak[0]
+
+        pakli = [k for k in pakli]
+        kazamatak = [k for k in kazamatak]
+        f.write(f"harc kezdődik: {akt_kazamata.nev}\n") 
+        while pakli and kazamatak:
+            kor_szamlalo += 1
+            akcio_j= "kijatszik"
+            akcio_k="kijatszik"
+            while pakli and kazamatak:
+                kor_szamlalo+=1
+                f.write(f"{kor_szamlalo}.kor;kazamata;{akcio_k};{akt_kazamata.nev};{akt_kazamata.sebzes};{akt_kazamata.eletero};{akt_kazamata.tipus}\n")
+                f.write(f"{kor_szamlalo}.kor;jatekos;{akcio_j};{akt_jatekos.nev};{akt_jatekos.sebzes};{akt_jatekos.eletero};{akt_jatekos.tipus}\n")
+                akcio_j="tamad"
+                akcio_k="tamad"
+                akt_jatekos.eletero -= sebzes_szamitas(akt_kazamata.tipus,akt_jatekos.tipus,akt_kazamata.sebzes) 
+                
+                akt_kazamata.eletero -= sebzes_szamitas(akt_jatekos.tipus,akt_kazamata.tipus,akt_jatekos.sebzes)
+                if akt_kazamata.eletero <= 0:
+                    kazamatak.pop(0)
+                    akcio_k="kijatszik"
+                    
+                    if len(kazamatak) == 0:
+                        f.write(f"jatekos nyert;{akt_jatekos.eletero};{akt_jatekos.nev}")
+                        break
+                    else: 
+                        pass
+                if akt_jatekos.eletero <=0:             
+                    pakli.pop(0)
+                    akcio_j="kijatszik"
+                                    
+                    if len(pakli) == 0:
+                        f.write(f"jatekos vesztett")
+                        break
+                    else:
+                        continue
+# -----------------------------------------------------------------------
+
 def main():
     if len(sys.argv) == 1:
         print("Használat: python script.py [--ui | <test_dir_path>]")
@@ -82,6 +155,11 @@ def run_ui():
     pass
 
 def run_automated_test(test_dir_path):
+    test_dir = Path(test_dir_path)
+    in_file = test_dir / "in.txt"
+    if not in_file.exists():
+        print(f"Hiba: nem található az input fájl: {in_file}")
+        return
     sorszam = 1
     sima_kartyak = []
     vezer_kartyak = []
@@ -89,7 +167,7 @@ def run_automated_test(test_dir_path):
     gyujtemeny_kartyai = Gyujtemeny()
     pakli = []
 
-    with open(Path(test_dir_path) / 'in.txt', "r", encoding="utf-8") as in_fajl:
+    with in_file.open("r", encoding="utf-8") as in_fajl:
         for sor in in_fajl:
             adat = sor.strip().split(";")
             if not adat or adat[0] == "":
@@ -149,6 +227,11 @@ def run_automated_test(test_dir_path):
                             pakli.append(kartya_p)
                     else:
                         print(f"Nincs ilyen kártya a paklihoz")
+            elif adat[0] == "harc":
+                k_nev = adat[1]
+                file_nev = test_dir / adat[2]
+                harc(pakli, kazamatak, file_nev)
+        
 
 if __name__ == "__main__":
     main()
