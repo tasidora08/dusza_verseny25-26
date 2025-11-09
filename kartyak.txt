@@ -1,38 +1,15 @@
-sima kartyak
-Arin;2;5;fold
-Liora;2;4;levego
-Nerun;3;3;tuz
-Selia;2;6;viz
-Torak;3;4;fold
-Emera;2;5;levego
-Vorn;2;7;viz
-Kael;3;5;tuz
-Myra;2;6;fold
-Thalen;3;5;levego
-Isara;2;6;viz
-vezer kartyak
-Lord Torak;6;4;fold;vezer
-Priestess Selia;2;12;fold;vezer
-kazamata
-Barlangi Portya;egyszeru;Nerun;3;3;tuz;sima;sebzes
-Osi Szentely;kis;Arin;2;5;fold;sima;eletero
-Osi Szentely;kis;Emera;2;5;levego;sima;eletero
-Osi Szentely;kis;Selia;2;6;viz;sima;eletero
-Osi Szentely;kis;Lord Torak;6;4;fold;vezer;eletero
-A melyseg kiralynoje;nagy;Liora;2;4;levego;sima;uj_kartya
-A melyseg kiralynoje;nagy;Arin;2;5;fold;sima;uj_kartya
-A melyseg kiralynoje;nagy;Selia;2;6;viz;sima;uj_kartya
-A melyseg kiralynoje;nagy;Nerun;3;3;tuz;sima;uj_kartya
-A melyseg kiralynoje;nagy;Torak;3;4;fold;sima;uj_kartya
-A melyseg kiralynoje;nagy;Priestess Selia;2;12;viz;sima;uj_kartya
-gyujtemeny
-Arin;2;5;fold
-Liora;2;4;levego
-Selia;2;6;viz
-Nerun;3;3;tuz
-Torak;3;4;fold
-Emera;2;5;levego
-Kael;3;5;tuz
-Myra;2;6;fold
-Thalen;3;5;levego
-Isara;2;6;viz
+Arin|2|5|fold
+Liora|2|4|levego
+Nerun|3|3|tuz
+Selia|2|6|viz
+Torak|3|4|fold
+Emera|2|5|levego
+Vorn|2|7|viz
+Kael|3|5|tuz
+Myra|2|6|fold
+Thalen|3|5|levego
+Isara|2|6|viz
+Lord Torak|6|4|fold|True
+Priestess Selia|2|12|viz|True
+Darth ObiWan|4|2|fold|True
+aaaaaaaaaaaaaaaaaaaa|3|4|fold|True
