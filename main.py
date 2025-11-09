@@ -91,52 +91,81 @@ def sebzes_szamitas(tamado_tipus, vedo_tipus, tamado_sebzes):
 
     return sebzes
 
-def harc(pakli,kazamatak,file_helye):
+def harc(pakli, kazamata_lista, file_helye, gyujtemeny_kartyai):
     file_helye = Path(file_helye)
     file_helye.parent.mkdir(parents=True, exist_ok=True)
     kor_szamlalo = 0
+
     if not pakli:
         raise ValueError("A pakli üres, nincs mivel harcolni.")
-    if not kazamatak:
+    if not kazamata_lista:
         raise ValueError("Nincsenek kazamaták (ellenfél hiányzik).")
+
     with file_helye.open("w", encoding="utf-8") as f:
         akt_jatekos = pakli[0]
-        akt_kazamata = kazamatak[0]
+        akt_kazamata = kazamata_lista[0]
+        f.write(f"harc kezdodik;{akt_kazamata.elnevezes}\n")
 
-        pakli = [k for k in pakli]
-        kazamatak = [k for k in kazamatak]
-        f.write(f"harc kezdődik: {akt_kazamata.nev}\n") 
-        while pakli and kazamatak:
+        akcio_j = "kijatszik"
+        akcio_k = "kijatszik"
+
+        while pakli and kazamata_lista:
             kor_szamlalo += 1
-            akcio_j= "kijatszik"
-            akcio_k="kijatszik"
-            while pakli and kazamatak:
-                kor_szamlalo+=1
+
+            # Kiírás
+            if akcio_k == "kijatszik":
                 f.write(f"{kor_szamlalo}.kor;kazamata;{akcio_k};{akt_kazamata.nev};{akt_kazamata.sebzes};{akt_kazamata.eletero};{akt_kazamata.tipus}\n")
+            else:
+                f.write(f"{kor_szamlalo}.kor;kazamata;tamad;{akt_kazamata.nev};{akt_kazamata.eletero};{akt_jatekos.nev};{akt_jatekos.eletero}\n")
+
+            if akcio_j == "kijatszik":
                 f.write(f"{kor_szamlalo}.kor;jatekos;{akcio_j};{akt_jatekos.nev};{akt_jatekos.sebzes};{akt_jatekos.eletero};{akt_jatekos.tipus}\n")
-                akcio_j="tamad"
-                akcio_k="tamad"
-                akt_jatekos.eletero -= sebzes_szamitas(akt_kazamata.tipus,akt_jatekos.tipus,akt_kazamata.sebzes) 
-                
-                akt_kazamata.eletero -= sebzes_szamitas(akt_jatekos.tipus,akt_kazamata.tipus,akt_jatekos.sebzes)
-                if akt_kazamata.eletero <= 0:
-                    kazamatak.pop(0)
-                    akcio_k="kijatszik"
-                    
-                    if len(kazamatak) == 0:
-                        f.write(f"jatekos nyert;{akt_jatekos.eletero};{akt_jatekos.nev}")
-                        break
-                    else: 
-                        pass
-                if akt_jatekos.eletero <=0:             
-                    pakli.pop(0)
-                    akcio_j="kijatszik"
-                                    
-                    if len(pakli) == 0:
-                        f.write(f"jatekos vesztett")
-                        break
-                    else:
-                        continue
+            else:
+                f.write(f"{kor_szamlalo}.kor;jatekos;tamad;{akt_jatekos.nev};{akt_jatekos.eletero};{akt_kazamata.nev};{akt_kazamata.eletero}\n")
+
+            f.write("\n")
+
+            akcio_j = "tamad"
+            akcio_k = "tamad"
+
+            # --- Kazamata támad először ---
+            dmg_k = sebzes_szamitas(akt_kazamata.tipus, akt_jatekos.tipus, akt_kazamata.sebzes)
+            akt_jatekos.eletero -= dmg_k
+            if akt_jatekos.eletero < 0:
+                akt_jatekos.eletero = 0
+
+            # --- JAVÍTÁS: Ha a játékos meghal, azonnal lép a következő körbe ---
+            if akt_jatekos.eletero <= 0:
+                pakli.pop(0)
+                if not pakli:
+                    f.write(f"kazamata nyert;{akt_kazamata.eletero};{akt_kazamata.nev}\n")
+                    break
+                else:
+                    akt_jatekos = pakli[0]
+                    akcio_j = "kijatszik"
+                    kor_szamlalo += 1  # új kör kezdődik a következő játékossal
+                    f.write(f"{kor_szamlalo}.kor;jatekos;{akcio_j};{akt_jatekos.nev};{akt_jatekos.sebzes};{akt_jatekos.eletero};{akt_jatekos.tipus}\n\n")
+                    continue  # Kazamata nem támad ugyanabban a körben
+
+            # --- Ha a játékos él, visszatámad ---
+            dmg_j = sebzes_szamitas(akt_jatekos.tipus, akt_kazamata.tipus, akt_jatekos.sebzes)
+            akt_kazamata.eletero -= dmg_j
+            if akt_kazamata.eletero < 0:
+                akt_kazamata.eletero = 0
+
+            if akt_kazamata.eletero <= 0:
+                kazamata_lista.pop(0)
+                if not kazamata_lista:
+                    f.write(f"jatekos nyert;{akt_jatekos.eletero};{akt_jatekos.nev}\n")
+                    break
+                else:
+                    akt_kazamata = kazamata_lista[0]
+                    akcio_k = "kijatszik"
+                    kor_szamlalo += 1  # új kör kezdődik az új kazamatával
+                    f.write(f"{kor_szamlalo}.kor;kazamata;{akcio_k};{akt_kazamata.nev};{akt_kazamata.sebzes};{akt_kazamata.eletero};{akt_kazamata.tipus}\n\n")
+                    continue
+
+
 # -----------------------------------------------------------------------
 
 def main():
@@ -227,10 +256,16 @@ def run_automated_test(test_dir_path):
                             pakli.append(kartya_p)
                     else:
                         print(f"Nincs ilyen kártya a paklihoz")
+                """elif adat[0] == "export vilag":
+                out_file = adat[1]
+                with out_file.open("w", encoding="utf-8") as file:
+                    for i in pakli:
+                        file.write(f"kartya;{i.nev};{i.sebzes};{i.eletero};{i.tipus}")
+            """
             elif adat[0] == "harc":
                 k_nev = adat[1]
                 file_nev = test_dir / adat[2]
-                harc(pakli, kazamatak, file_nev)
+                harc(pakli, kazamatak, file_nev, gyujtemeny_kartyai)
         
 
 if __name__ == "__main__":
